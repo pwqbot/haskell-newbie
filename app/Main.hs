@@ -1,14 +1,11 @@
 module Main where
-
 main :: IO ()
 main = putStrLn "Hello, Haskell!"
 
 doubleMe x = x + x
 
 doubleUs x y = doubleMe x + doubleMe y
-
-doubleSmallNumber x = if x > 100 then x else x * 2
-
+doubleSmallNumber x = if x > 100 then x else x * 2 
 doubleSmallNumber' x = (if x > 100 then x else x * 2) + 1
 
 conanO'Brien = "It's a-me, Conan O'Brien!"
@@ -94,3 +91,133 @@ quicksort (x:xs) =
   let left = quicksort [y| y <- xs, y <= x]
       right = quicksort [y| y <- xs, y > x]
   in left ++ [x] ++ right
+
+-- point free style
+fn = ceiling . negate . tan . cos . max 50 
+
+oddSquareSum :: Integer
+oddSquareSum = sum . takeWhile (<10000) . filter odd . map (^2) $ [1..]
+
+-- recursive function
+myGCD :: Integer -> Integer -> Integer
+myGCD a 0 = a
+myGCD a b = myGCD b reminder 
+    where reminder = a `mod` b
+
+myLength [] = 0
+myLength (x:xs) = 1 + myLength xs
+
+myTake _ [] = []
+myTake 0 _ = []
+myTake n (x:xs) = x : myTake (n - 1) xs
+
+myCycle [] = []
+myCycle (x:xs) = x : myCycle (xs ++ [x])
+
+ackermann 0 n = n + 1
+ackermann m 0 = ackermann (m - 1) 1
+ackermann m n = ackermann (m - 1) (ackermann m (n - 1))
+
+fib a b 0 = (a, b)
+fib a b c = fib b (a + b) (c - 1)
+
+myFoldl f init [] = init
+myFoldl f init (x:xs) = myFoldl f (f init x) xs
+
+myFoldr f init [] = init
+myFoldr f init (x:xs) = f x rightResult
+    where rightResult = myFoldr f init xs
+
+cup flOz = \message -> message flOz -- sotre flOz in lambda
+getCup aCup = aCup id
+drinkCup aCup drinkOz = if ozDiff >= 0 
+                        then cup ozDiff
+                        else cup 0
+                        where ozDiff = getCup aCup - drinkOz
+
+data Box a = Box a deriving Show
+
+simple :: a -> a
+simple x = x
+
+patientInfo :: String -> String -> Int -> Int -> String
+patientInfo fname lname age height = name ++ " " ++ ageHeight
+    where name = lname ++ " " ++ fname
+          ageHeight = "(" ++ show age ++ "yrs. " ++ show height ++ "in.)"
+
+data Sex = Male | Female deriving Show 
+
+data ABOType = A | B | AB | O
+
+data RhType = Pos | Neg
+
+data BloodType = BloodType ABOType RhType
+
+data Name = Name String String
+
+data Patient = Patient {
+    name :: Name,
+    sex :: Sex
+}
+
+jackie = Patient {name=Name "sb" "sb", sex=Male}
+
+class FF a where
+    fun1 :: a -> a
+    fun2 :: a -> String
+    fun3 :: a -> b -> Bool
+
+class Describable a where
+    describle :: a -> String
+
+instance Describable Sex where
+    describle Male = "ok"
+
+data TwoSideDie = One | Two
+
+-- Cipher
+class Cipher a where
+    decode :: a -> String -> String
+    encode :: a -> String -> String
+
+type Bits = [Bool]
+
+intToBits' :: Int -> Bits
+intToBits' 0 = []
+intToBits' 1 = [True]
+intToBits' x = result
+    where result = if reminder == 1
+                   then True : intToBits' (x `div` 2)
+                   else False : intToBits' (x `div` 2)
+                   where reminder = x `mod` 2
+
+maxBits :: Int
+maxBits = length (intToBits' maxBound)
+
+intToBits :: Int -> Bits
+intToBits x = leadingFalses ++ reverse result
+    where  leadingFalses = replicate num False
+           num = maxBits - length result
+           result = intToBits' x
+
+charToBits :: Char -> Bits
+charToBits x = intToBits $ fromEnum x 
+
+bitsToInt :: Bits -> Int
+bitsToInt bits = sum (map (\x -> 2^fst x) bitspair)
+    where bitspair = filter snd (zip ex bits)
+          ex = [maxBits-1, maxBits-2 .. 0]
+
+data Triple a = Triple a a a deriving Show
+
+type Point3D = Triple Double
+aPoint:: Point3D
+aPoint = Triple 1 2 3
+
+-- data Vec n a where
+--     Vnil  :: Vec Zero a
+--     Vcons :: a -> Vec n a -> Vec (Succ n) a
+-- data Zero
+-- data Succ a
+
+data List a = Empty | Cons a (List a) deriving Show
