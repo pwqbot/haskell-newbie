@@ -1,6 +1,9 @@
 module Main where
-main :: IO ()
-main = putStrLn "Hello, Haskell!"
+import System.Environment
+import Control.Monad
+import qualified Data.Monoid as M
+import qualified Data.Map as Map
+import qualified Data.Semigroup as M
 
 doubleMe x = x + x
 
@@ -147,7 +150,7 @@ patientInfo fname lname age height = name ++ " " ++ ageHeight
 
 data Sex = Male | Female deriving Show 
 
-data ABOType = A | B | AB | O
+data ABOType = Aa | Bb | AB | O
 
 data RhType = Pos | Neg
 
@@ -220,4 +223,120 @@ aPoint = Triple 1 2 3
 -- data Zero
 -- data Succ a
 
+
+
 data List a = Empty | Cons a (List a) deriving Show
+myList1 = Cons 1 $ Cons 2 Empty
+
+
+main :: IO ()
+main = do
+    putStrLn "Hello! What's your name?"
+    name <- getLine
+    let statement = "sadf" ++ name
+    putStrLn statement
+
+
+reverser :: IO () 
+reverser = do
+    input <- getContents
+    let reversed = take 4 input
+    putStrLn reversed
+
+type UserName = String
+type GamerId = Int
+type PlayerCredits = Int
+
+userNameDB :: Map.Map GamerId UserName
+
+userNameDB = Map.fromList [(1, "xingping"),
+                           (2, "likajiang"),
+                           (3, "xianggangjizhe")]
+
+creditsDB :: Map.Map UserName PlayerCredits
+creditsDB = Map.fromList [("xingping", 2000),
+                          ("likajiang", 3000)]
+
+
+creditsFromId :: GamerId -> Maybe PlayerCredits
+creditsFromId = altLookUpCredits . lookupUserName
+
+lookupUserName :: GamerId -> Maybe UserName
+lookupUserName id = Map.lookup id userNameDB
+
+lookupCredits :: UserName -> Maybe PlayerCredits
+lookupCredits name = Map.lookup name creditsDB
+
+altLookUpCredits :: Maybe UserName -> Maybe PlayerCredits
+altLookUpCredits Nothing = Nothing
+altLookUpCredits (Just a) = lookupCredits a
+
+creditsFromId' id = lookupUserName id >>= lookupCredits
+
+echo :: IO()
+echo = putStrLn "enter a string" >> getLine >>= putStrLn
+
+data Grade = F | D | C | B | A deriving (Eq, Ord, Enum, Show, Read)
+data Degree = HS | BA | MS | PHD deriving (Eq, Ord, Enum, Show, Read)
+data Candidate = Candidate 
+    {
+        candidateID :: Int,
+        codeReview :: Grade,
+        cultureFit :: Grade,
+        education :: Degree
+    } deriving Show
+
+
+
+
+
+
+viable :: Candidate -> Bool
+viable candidate = all (== True) tests
+    where tests = [ 
+            passCoding,
+            passedCultureFit,
+            educationMin ]
+          passCoding = codeReview candidate > B
+          passedCultureFit = cultureFit candidate > C
+          educationMin = education candidate > MS
+
+candidate1 = Candidate {candidateID=1, codeReview=A, cultureFit=A, education=PHD}
+candidate2 = Candidate {candidateID=2, codeReview=B, cultureFit=C, education=MS}
+candidate3 = Candidate {candidateID=2, codeReview=A, cultureFit=C, education=BA}
+candidates = [candidate1, candidate2, candidate3]
+
+listOfTuples :: [(Int, Char)]
+listOfTuples = do
+    n <- [1,2]
+    ch <- ['a', 'b']
+    return (n, ch)
+
+listOfTuples' = [1, 2] >>= \n -> ['a', 'b'] >>= \ch -> return (n, ch)
+
+marySue :: Maybe Bool
+marySue = do
+    x <- Just 9
+    Just (x > 8)
+
+type KnightPos = (Int, Int)
+
+moveKnight :: KnightPos -> [KnightPos]
+moveKnight (c, r) = do
+    (c', r') <- [(c + 2, r - 1), (c + 2, r + 1), (c - 2, r - 1), (c - 2, r + 1)
+           ,(c + 1, r - 2), (c + 1, r + 2), (c - 1, r - 2), (c - 1, r + 2)]
+    guard (c' `elem` [1..8] && r' `elem` [1..8])
+    return (c', r')
+
+move3 x = moveKnight x >>= moveKnight >>= moveKnight
+
+newtype Any = Any { getAny :: Bool }
+    deriving (Eq, Ord, Read, Show, Bounded)
+
+instance M.Semigroup Any where
+   (<>) (Any x) (Any y) = Any (x || y)
+
+instance M.Monoid Any where
+    mempty = Any False
+
+ok = [Any True, Any False, Any True]
