@@ -25,10 +25,11 @@ executable haskell-newbie
     main-is:          Main.hs
 
     -- Modules included in this executable, other than Main.
-    -- other-modules:
+    other-modules: Ok, Zipper, Parser, Monad_L
 
     -- LANGUAGE extensions used by modules in this package.
-    -- other-extensions:
+    -- other-extensions: ImportQualifiedPost
     build-depends:    base ^>=4.16.3.0
+                      , containers, mtl, random
     hs-source-dirs:   app
     default-language: Haskell2010

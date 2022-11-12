@@ -1,6 +1,10 @@
+{-# OPTIONS_GHC -Wno-noncanonical-monad-instances #-}
 module Main where
 import System.Environment
-import Control.Monad
+import qualified Control.Monad as Mo
+import Ok
+import qualified Control.Monad.Writer as W
+import Control.Monad.State
 import qualified Data.Monoid as M
 import qualified Data.Map as Map
 import qualified Data.Semigroup as M
@@ -50,11 +54,11 @@ head' :: [a] -> a
 head' [] = error "fuck"
 head' (x : _) = x
 
-tell :: (Show a) => [a] -> String
-tell [] = "The list is empty"
-tell [x] = "The list has one element: " ++ show x
-tell [x, y] = "The list has two elements: " ++ show x ++ " and " ++ show y
-tell (x : y : _) = "This list is long. The first two elements are: " ++ show x ++ " and " ++ show y
+-- tell :: (Show a) => [a] -> String
+-- tell [] = "The list is empty"
+-- tell [x] = "The list has one element: " ++ show x
+-- tell [x, y] = "The list has two elements: " ++ show x ++ " and " ++ show y
+-- tell (x : y : _) = "This list is long. The first two elements are: " ++ show x ++ " and " ++ show y
 
 max' :: (Ord a) => a -> a -> a
 max' a b
@@ -286,11 +290,6 @@ data Candidate = Candidate
         education :: Degree
     } deriving Show
 
-
-
-
-
-
 viable :: Candidate -> Bool
 viable candidate = all (== True) tests
     where tests = [ 
@@ -325,18 +324,64 @@ moveKnight :: KnightPos -> [KnightPos]
 moveKnight (c, r) = do
     (c', r') <- [(c + 2, r - 1), (c + 2, r + 1), (c - 2, r - 1), (c - 2, r + 1)
            ,(c + 1, r - 2), (c + 1, r + 2), (c - 1, r - 2), (c - 1, r + 2)]
-    guard (c' `elem` [1..8] && r' `elem` [1..8])
+    Mo.guard (c' `elem` [1..8] && r' `elem` [1..8])
     return (c', r')
 
 move3 x = moveKnight x >>= moveKnight >>= moveKnight
 
-newtype Any = Any { getAny :: Bool }
+newtype Any' = Any' { getAny :: Bool }
     deriving (Eq, Ord, Read, Show, Bounded)
 
-instance M.Semigroup Any where
-   (<>) (Any x) (Any y) = Any (x || y)
+instance M.Semigroup Any' where
+   (<>) (Any' x) (Any' y) = Any' (x || y)
 
-instance M.Monoid Any where
-    mempty = Any False
+instance M.Monoid Any' where
+    mempty = Any' False
 
-ok = [Any True, Any False, Any True]
+ok = [Any' True, Any' False, Any' True]
+
+newtype Writer w a = Writer { runWriter :: (a, w) }
+
+instance (M.Monoid w) => Functor (Writer w) where
+    fmap f (Writer (x, v)) = Writer (f x, v)
+
+instance (M.Monoid w) => Applicative (Writer w) where 
+    pure x = Writer (x, mempty) 
+    (<*>) (Writer (f, v)) (Writer (x, v')) = let y = f x in Writer (y, v `mappend` v')
+
+instance (M.Monoid w) => Mo.Monad (Writer w) where
+    (Writer (x, v)) >>= f = let (Writer (y, v')) = f x in Writer (y, v `mappend` v')
+
+logNumber :: Int -> Writer [String] Int
+logNumber x = Writer (x, ["Got Number" ++ show x])
+
+tell x = Writer ((),x)
+
+multWithLog :: Writer [String] Int
+multWithLog = do
+    a <- logNumber 3
+    b <- logNumber 5
+    tell ["fuck"]
+    return (a * b)
+
+addStuff :: Int -> Int
+addStuff = do
+    a <- (*2)
+    b <- (+10)
+    return (a + b)
+
+type Stack = [Int]
+
+pop:: Stack -> (Int, Stack)
+pop (x:xs) = (x, xs)
+
+push:: Int -> Stack -> ((), Stack)
+push a xs = ((), a:xs)
+
+stackManip1 :: Stack -> (Int, Stack)
+stackManip1 stack = let
+    ((), newStack1) = push 3 stack
+    (a, newStack2) = pop newStack1
+    in pop newStack2
+
+newtype State s a = State { runState :: s -> (a, s) }
